@@ -38,8 +38,8 @@ struct protocol_parser {
     } state;
 
     uint8_t buffer[MAX_DATA_SIZE];
-    uint16_t buffer_length;
-    uint16_t data_size;
+    uint16_t buffer_length;// кол-во байт в буфере
+    uint16_t data_size;// полезные данные 
     uint8_t cmd;
     uint16_t crc;
 };
@@ -48,6 +48,16 @@ enum parser_result {
     PARSER_OK,
     PARSER_ERROR,
     PARSER_DONE,
+};
+
+struct for_receiving{
+    uint8_t data_size_l;
+    uint8_t data_size_h;
+    uint8_t cmd;
+    uint8_t error;
+    uint32_t value;
+    uint8_t crc_l;
+    uint8_t crc_h;
 };
 
 struct for_transfer
@@ -71,9 +81,10 @@ static const struct value_range VALUE_RANGES[] = {
 int main()
 {
     static void serialize_reply(uint8_t * buf, size_t buf_size, uint8_t cmd, uint8_t status, uint32_t value);
-    
-    int buf_size = 11;
+    static void deserialize_reply(const uint8_t * buf, size_t buf_size, uint8_t data_size_l, uint8_t data_size_h, uint8_t cmd, uint8_t error_code, uint32_t value, uint8_t crc_l, uint8_t crc_h);
+
     struct for_transfer data;
+    struct for_receiving priem;
     unsigned int input_number; // переменная для передачи записи и передачи в struct for_transfer чисел
 
     //----------------------------------------------------------------------------------------
@@ -121,15 +132,37 @@ int main()
 
     printf("Your write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value);
 
-    serialize_reply(data.buf, buf_size, data.cmd, data.status, data.value );
+    serialize_reply(data.buf, sizeof(data.buf), data.cmd, data.status, data.value );
     printf("Paket:\n");
     for (int a = 0; a < 11; a++) {
-        printf("0x%X\n", data.buf[a]);
+        printf("0x%02X\n", data.buf[a]);
     }
- //--------------------------------------------------------------------------------------
+    printf("\n");
 
+    deserialize_reply(data.buf, sizeof(data.buf), priem.data_size_l, priem.data_size_h, priem.cmd, priem.error, priem.value, priem.crc_l, priem.crc_h);
 
-
+    printf("Received data:\nUseful data (L-H):\n0x%02X\n0x%02X\nCMD:\n0x%02X\n", priem.data_size_l, priem.data_size_h, priem.cmd);
+    printf("Status error:\n0x%02X", priem.error);
+    switch (priem.error){ 
+    case STATUS_OK:
+        printf("  Successfully!");
+        break;
+    case STATUS_EXEC_ERROR:
+        printf("  Сommand execution error\n");
+        break;
+    case STATUS_INVALID_CMD:
+        printf("  A non-existent team\n");
+        break;
+    case STATUS_TIMED_OUT:
+        printf("  Command execution time exceeded\n");
+        break;
+    case STATUS_INVALID_SIZE:
+        printf("  Сommand data size error\n");
+        break;
+    }
+    printf("Value:\n0x%02X\n", priem.value);
+    printf("CRC (L-H):\n0x%02X\n0x%02X\n", priem.crc_l, priem.crc_h);
+    
     return 0;
 }
 
@@ -157,65 +190,30 @@ static uint16_t calculate_crc(const uint8_t* array, int size) {
     return crc;
 }
 
-
-static enum parser_result process_rx_byte(struct protocol_parser* parser, uint8_t byte) // принимает пакет данных
+static void deserialize_reply(const uint8_t* buf, size_t buf_size, uint8_t data_size_l, uint8_t data_size_h, uint8_t cmd, uint8_t error_code, uint32_t value, uint8_t crc_l, uint8_t crc_h)
 {
-    enum parser_result ret = PARSER_OK;
-
-    switch (parser->state) {
-    case STATE_SYNC:
-        if (byte == SYNC_BYTE) {
-            parser->state = STATE_SIZE_L;
-            parser->crc = CRC_INIT;
-            parser->buffer_length = 0;
-        }
-        break;
-    case STATE_SIZE_L:
-        parser->data_size = byte;
-        parser->state = STATE_SIZE_H;
-        break;
-    case STATE_SIZE_H:
-        parser->data_size |= ((uint16_t)byte << 8);
-        if (parser->data_size >= DATA_SIZE_OFFSET &&
-            parser->data_size <= MAX_DATA_SIZE + DATA_SIZE_OFFSET) {
-            parser->state = STATE_CMD;
-        }
-        else {
-            parser->state = STATE_SYNC;
-            ret = PARSER_ERROR;
-        }
-        break;
-    case STATE_CMD:
-        parser->crc = update_crc(parser->crc, byte);
-        parser->cmd = byte;
-        parser->state = parser->data_size != DATA_SIZE_OFFSET ? STATE_DATA : STATE_CRC_L;
-        break;
-    case STATE_DATA:
-        parser->crc = update_crc(parser->crc, byte);
-        parser->buffer[parser->buffer_length] = byte;
-        parser->buffer_length++;
-        if (parser->buffer_length + DATA_SIZE_OFFSET >= parser->data_size) {
-            parser->state = STATE_CRC_L;
-        }
-        break;
-    case STATE_CRC_L:
-        parser->crc = update_crc(parser->crc, byte);
-        parser->state = STATE_CRC_H;
-        break;
-    case STATE_CRC_H:
-        parser->crc = update_crc(parser->crc, byte);
-        parser->state = STATE_SYNC;
-        ret = parser->crc == 0 ? PARSER_DONE : PARSER_ERROR;
-        break;
+    static const uint16_t PAYLOAD_SIZE = 5;
+    if (buf_size < 11) {
+        //printf("Error paket\n");
+        return;
     }
+    data_size_l = buf[1];
+    data_size_h = buf[2];
+    cmd = buf[3];
+    error_code = buf[4];
+    value = (uint32_t)buf[8] << 24 | (uint32_t)buf[7] << 16 | (uint32_t)buf[6] << 8 | (uint32_t)buf[5] << 0;
+    uint16_t crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
+    crc_l = crc << 0;
+    crc_h = crc << 8;
+    printf("Size paket (Bytes): %u\n", buf_size);
 
-    return ret;
 }
 
 
 static void serialize_reply(uint8_t* buf, size_t buf_size,
     uint8_t cmd, uint8_t status, uint32_t value) {
     if (buf_size < 11) {
+        //printf("Error paket\n");
         return;
     }
 

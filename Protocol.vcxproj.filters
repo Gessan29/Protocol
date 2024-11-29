@@ -19,4 +19,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Desktop\code.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+    <None Include="..\..\..\..\Downloads\soc_link.c">
+      <Filter>Исходные файлы</Filter>
+    </None>
+  </ItemGroup>
 </Project>
