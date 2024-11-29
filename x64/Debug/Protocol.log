@@ -1,3 +1,7 @@
 ﻿  Protocol.c
-F:\Windows Kits\10\Include\10.0.22621.0\ucrt\stdio.h(950,37): error C2059: синтаксическая ошибка: (
-C:\Users\user\source\repos\Protocol\Protocol\Protocol.c(91,5): warning C4013: printf: нет определения; предполагается "extern" с возвратом типа "int"
+C:\Users\user\source\repos\Protocol\Protocol\Protocol.c(156,5): error C2037: слева от "state" указана неопределенная структура или объединение "protocol_parser"
+C:\Users\user\source\repos\Protocol\Protocol\Protocol.c(156,21): error C2065: STATE_SYNC: необъявленный идентификатор
+C:\Users\user\source\repos\Protocol\Protocol\Protocol.c(195,12): warning C4477: "printf": в строке форматирования "%u" требуется аргумент типа "unsigned int", но вариативный аргумент "1" имеет тип "size_t"
+      C:\Users\user\source\repos\Protocol\Protocol\Protocol.c(195,12):
+      рекомендуется использовать "%zu" в строке форматирования
+  

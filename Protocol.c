@@ -55,7 +55,7 @@ struct for_receiving{
     uint8_t data_size_h;
     uint8_t cmd;
     uint8_t error;
-    uint32_t value;
+    uint32_t value[4];
     uint8_t crc_l;
     uint8_t crc_h;
 };
@@ -81,7 +81,7 @@ static const struct value_range VALUE_RANGES[] = {
 int main()
 {
     static void serialize_reply(uint8_t * buf, size_t buf_size, uint8_t cmd, uint8_t status, uint32_t value);
-    static void deserialize_reply(const uint8_t * buf, size_t buf_size, uint8_t data_size_l, uint8_t data_size_h, uint8_t cmd, uint8_t error_code, uint32_t value, uint8_t crc_l, uint8_t crc_h);
+    static void deserialize_reply(const uint8_t * buf, size_t buf_size, struct for_receiving* priem);
 
     struct for_transfer data;
     struct for_receiving priem;
@@ -139,16 +139,16 @@ int main()
     }
     printf("\n");
 
-    deserialize_reply(data.buf, sizeof(data.buf), priem.data_size_l, priem.data_size_h, priem.cmd, priem.error, priem.value, priem.crc_l, priem.crc_h);
+    deserialize_reply(data.buf, sizeof(data.buf), &priem);
 
-    printf("Received data:\nUseful data (L-H):\n0x%02X\n0x%02X\nCMD:\n0x%02X\n", priem.data_size_l, priem.data_size_h, priem.cmd);
-    printf("Status error:\n0x%02X", priem.error);
+    printf("Received data:\n0xAA\n0x%02X\n0x%02X\n0x%02X\n", priem.data_size_l, priem.data_size_h, priem.cmd);
+    printf("0x%02X", priem.error);
     switch (priem.error){ 
     case STATUS_OK:
-        printf("  Successfully!");
+        printf("  Successfully!\n");
         break;
     case STATUS_EXEC_ERROR:
-        printf("  Сommand execution error\n");
+        printf("  Successfully!\n"); //(Сommand execution error)
         break;
     case STATUS_INVALID_CMD:
         printf("  A non-existent team\n");
@@ -160,8 +160,8 @@ int main()
         printf("  Сommand data size error\n");
         break;
     }
-    printf("Value:\n0x%02X\n", priem.value);
-    printf("CRC (L-H):\n0x%02X\n0x%02X\n", priem.crc_l, priem.crc_h);
+    printf("0x%02X\n0x%02X\n0x%02X\n0x%02X\n", priem.value[0], priem.value[1], priem.value[2], priem.value[3]);
+    printf("0x%02X\n0x%02X\n", priem.crc_l, priem.crc_h);
     
     return 0;
 }
@@ -190,30 +190,33 @@ static uint16_t calculate_crc(const uint8_t* array, int size) {
     return crc;
 }
 
-static void deserialize_reply(const uint8_t* buf, size_t buf_size, uint8_t data_size_l, uint8_t data_size_h, uint8_t cmd, uint8_t error_code, uint32_t value, uint8_t crc_l, uint8_t crc_h)
+static void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem)
 {
     static const uint16_t PAYLOAD_SIZE = 5;
     if (buf_size < 11) {
-        //printf("Error paket\n");
+        printf("Error paket\n");
         return;
     }
-    data_size_l = buf[1];
-    data_size_h = buf[2];
-    cmd = buf[3];
-    error_code = buf[4];
-    value = (uint32_t)buf[8] << 24 | (uint32_t)buf[7] << 16 | (uint32_t)buf[6] << 8 | (uint32_t)buf[5] << 0;
+    priem->data_size_l = buf[1];
+    priem->data_size_h = buf[2];
+    priem->cmd = buf[3];
+    priem->error = buf[4];
+    priem->value[0] = (uint32_t)buf[5];
+    priem->value[1] = (uint32_t)buf[6];
+    priem->value[2] = (uint32_t)buf[7];
+    priem->value[3] = (uint32_t)buf[8];
     uint16_t crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
-    crc_l = crc << 0;
-    crc_h = crc << 8;
+    priem->crc_l = (crc >> 0) & 0xFF;
+    priem->crc_h = (crc >> 8) &0xFF;
     printf("Size paket (Bytes): %u\n", buf_size);
-
+    
 }
 
 
 static void serialize_reply(uint8_t* buf, size_t buf_size,
     uint8_t cmd, uint8_t status, uint32_t value) {
     if (buf_size < 11) {
-        //printf("Error paket\n");
+        printf("Error paket\n");
         return;
     }
 
