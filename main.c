@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string>
+#include <string.h>
 #include <stdint.h>
 
 #define MAX_DATA_SIZE 16 
@@ -21,19 +21,17 @@
 #define STATUS_INVALID_SIZE 4 // Ошибка размера данных команды
 
 //Тестовые команды для отладки протокола
-#define APPLY_VOLTAGE_RL1_H 0 // команда подать лог. 1 на RL1 для замыкания цепи питания 12В
+#define APPLY_VOLTAGE_RL1 0 // команда подать лог. 1 на RL1 для замыкания цепи питания 12В
 #define TEST_VOLTAGE_4_POINT 1 // команда проверка напр. в 4 контрольных точках +6 -6 +5 +3.3В
 #define ANALYSIS_VOLTAGE_CORRENT 2 // команда измерение напр. и тока питания
-#define APPLY_VOLTAGE_RL2_H 3 // Команда лог. 1 на RL2 для замыкания R1 и R22
+#define APPLY_VOLTAGE_RL2 3 // Команда лог. 1 на RL2 для замыкания R1 и R22
 #define TEST_VOLTAGE_11_POINT 4 // команда проверки напр. в 12 контр. точках
 #define TEST_CORRENT_LASER 5 // Команда измерения формы тока лазерного диода 
 #define TEST_VOLTAGE_PELTIE 6 // Команда измерения напряжения элемента Пельтье  
-#define APPLY_VOLTAGE_5_RL_L 7 // команда подать лог. 0 для РАЗМЫКАНИЯ RL3-RL7
+#define APPLY_VOLTAGE_5_RL 7 // команда подать лог. 0 для РАЗМЫКАНИЯ RL3-RL7
 #define MASSAGE_RS232 8 // команда отправки заготовленного пакета по RS232
 #define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232 раз в сек
-#define APPLY_VOLTAGE_RL1_L 10 // команда подать лог. 0 на RL1 для прекращения питания платы
-#define APPLY_VOLTAGE_5_RL_H 11 // команда подать лог. 1 на RL3-RL7 для ЗАМЫКАНИЯ
-#define APPLY_VOLTAGE_RL2_L 12 // команда подачи лог. 0 на RL2 для размыкания R1 и R22
+
 
 
 #define CRC_INIT 0xffff // для подсчета контрольной суммы CRC
@@ -74,7 +72,8 @@ struct for_receiving{
 
 struct for_transfer
 {
-    uint8_t buf[11];
+    uint8_t *buf;
+    size_t buf_size;
     uint8_t cmd;
     uint8_t status;
     uint32_t value;
@@ -86,19 +85,16 @@ struct value_range {
 };
 
 static const struct value_range VALUE_RANGES[] = {
-    [APPLY_VOLTAGE_RL1_H] = {1}, 
+    [APPLY_VOLTAGE_RL1] = {.min = 0, .max = 1},
     [TEST_VOLTAGE_4_POINT] = {.min = 0, .max = 3},
     [ANALYSIS_VOLTAGE_CORRENT] = {.min = 0, .max = 1},
-    [APPLY_VOLTAGE_RL2_H] = {1},
+    [APPLY_VOLTAGE_RL2] = {.min = 0, .max = 1},
     [TEST_VOLTAGE_11_POINT] = {.min = 0, .max = 12},
     [TEST_CORRENT_LASER] = {1},
     [TEST_VOLTAGE_PELTIE] = {1},
-    [APPLY_VOLTAGE_5_RL_L] = {0},
+    [APPLY_VOLTAGE_5_RL] = {.min = 0, .max = 1},
     [MASSAGE_RS232] = {1},
     [MASSAGE_NMEA] = {1},
-    [APPLY_VOLTAGE_RL1_L] = {0},
-    [APPLY_VOLTAGE_5_RL_H] = {1},
-    [APPLY_VOLTAGE_RL2_L] = {0},
 };
 
 int main()
@@ -113,11 +109,31 @@ int main()
     //----------------------------------------------------------------------------------------
     printf("Choose set (1) or get (0) command (cmd): ");
     scanf("%u", &input_number);
+
     if (input_number < 0 || input_number > 1)
     {
         printf("Error, overflow!");
         return -1;
     }
+
+    if (input_number == 0)
+    {
+        data.buf_size = 7;
+        data.buf = (uint8_t*)malloc(data.buf_size * sizeof(uint8_t));
+        memset(data.buf, 0, data.buf_size * sizeof(uint8_t));
+        for (size_t i = 0; i < data.buf_size; i++) {
+            printf("%d ", data.buf[i]);
+        }
+        printf("\n");
+        
+    }
+    else {
+        data.buf_size = 11;
+        data.buf = (uint8_t*)malloc(data.buf_size * sizeof(uint8_t));
+        memset(data.buf, 0, data.buf_size * sizeof(uint8_t));
+        
+    }
+
     data.cmd = (uint8_t)input_number;
     
 
@@ -131,11 +147,11 @@ int main()
     data.status = (uint8_t)input_number;
     switch (data.status)
     {
-    case APPLY_VOLTAGE_RL1_H:
-        printf("%d: Apply high level voltage on RL1\n", data.status);
-        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+    case APPLY_VOLTAGE_RL1:
+        printf("%d: Set low (0) or high (1) level voltage on RL1\n", data.status);
+        printf("Write code command [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
         scanf("%u", &data.value);
-        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].max)
         {
             printf("Error, overflow!");
             return -1;
@@ -164,11 +180,11 @@ int main()
         }
         break;
 
-    case APPLY_VOLTAGE_RL2_H:
-        printf("%d: Apply high level voltage on RL2\n", data.status);
-        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+    case APPLY_VOLTAGE_RL2:
+        printf("%d: Set low (0) or high (1) level voltage on RL2\n", data.status);
+        printf("Write code command [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
         scanf("%u", &data.value);
-        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].max)
         {
             printf("Error, overflow!");
             return -1;
@@ -208,9 +224,9 @@ int main()
         }
         break;
 
-    case APPLY_VOLTAGE_5_RL_L:
-        printf("%d: Apply low level voltage on RL3-RL7\n", data.status);
-        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+    case APPLY_VOLTAGE_5_RL:
+        printf("%d: Set low (0) or high (1) level voltage on RL3-RL7\n", data.status);
+        printf("Write code command [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
         scanf("%u", &data.value);
         if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
         {
@@ -240,42 +256,9 @@ int main()
             return -1;
         }
         break;
-
-    case APPLY_VOLTAGE_RL1_L:
-        printf("%d: Apply low level voltage on RL1\n", data.status);
-        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
-        scanf("%u", &data.value);
-        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
-        {
-            printf("Error, overflow!");
-            return -1;
-        }
-        break;
-
-    case APPLY_VOLTAGE_5_RL_H:
-        printf("%d: Apply high lelel voltage on RL3-RL7\n", data.status);
-        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
-        scanf("%u", &data.value);
-        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
-        {
-            printf("Error, overflow!");
-            return -1;
-        }
-        break;
-
-    case APPLY_VOLTAGE_RL2_L:
-        printf("%d: Apply low level voltage on RL2\n", data.status);
-        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
-        scanf("%u", &data.value);
-        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
-        {
-            printf("Error, overflow!");
-            return -1;
-        }
-        break;
     }
 
-    printf("Your write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value);
+    printf("\nYour write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value);
 
     serialize_reply(data.buf, sizeof(data.buf), data.cmd, data.status, data.value );
     printf("Paket:\n");
@@ -307,7 +290,7 @@ int main()
     }
     printf("0x%02X\n0x%02X\n0x%02X\n0x%02X\n", priem.value[0], priem.value[1], priem.value[2], priem.value[3]);
     printf("0x%02X\n0x%02X\n", priem.crc_l, priem.crc_h);
-    
+    free(data.buf);
     return 0;
 }
 
@@ -338,7 +321,7 @@ static uint16_t calculate_crc(const uint8_t* array, int size) {
 static void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem)
 {
     static const uint16_t PAYLOAD_SIZE = 5;
-    if (buf_size < 11) {
+    if (buf_size < 7) {
         printf("Error paket\n");
         return;
     }
@@ -358,26 +341,25 @@ static void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_re
 }
 
 
-static void serialize_reply(uint8_t* buf, size_t buf_size,
-    uint8_t cmd, uint8_t status, uint32_t value) {
-    if (buf_size < 11) {
+static void serialize_reply(struct for_transfer* data) {
+    if (data->buf_size < 7) {
         printf("Error paket\n");
         return;
     }
 
     static const uint16_t PAYLOAD_SIZE = 5;
-    buf[0] = SYNC_BYTE;
-    buf[1] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 0) & 0xff;
-    buf[2] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 8) & 0xff;
-    buf[3] = cmd;
-    buf[4] = status;
-    buf[5] = (value >> 0) & 0xff;
-    buf[6] = (value >> 8) & 0xff;
-    buf[7] = (value >> 16) & 0xff;
-    buf[8] = (value >> 24) & 0xff;
-    uint16_t crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
-    buf[9] = (crc >> 0) & 0xff;
-    buf[10] = (crc >> 8) & 0xff;
+    data->buf[0] = SYNC_BYTE;
+    data->buf[1] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 0) & 0xff;
+    data->buf[2] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 8) & 0xff;
+    data->buf[3] = data->cmd;
+    data->buf[4] = data->status;
+    data->buf[5] = (data->value >> 0) & 0xff;
+    data->buf[6] = (data->value >> 8) & 0xff;
+    data->buf[7] = (data->value >> 16) & 0xff;
+    data->buf[8] = (data->value >> 24) & 0xff;
+    uint16_t crc = calculate_crc(data->buf + 3, PAYLOAD_SIZE + 1);
+    data->buf[9] = (crc >> 0) & 0xff;
+    data->buf[10] = (crc >> 8) & 0xff;
 }
 
 
