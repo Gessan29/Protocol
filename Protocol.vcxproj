@@ -130,9 +130,6 @@
   <ItemGroup>
     <ClCompile Include="func.c" />
     <ClCompile Include="parser.c" />
-    <None Include="..\..\..\..\Downloads\soc_link.c">
-      <FileType>CppCode</FileType>
-    </None>
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>

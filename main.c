@@ -21,8 +21,20 @@
 #define STATUS_INVALID_SIZE 4 // Ошибка размера данных команды
 
 //Тестовые команды для отладки протокола
-#define VOLTAGE_SUPPLY 0 // напряжение питания
-#define CURRENT_SUPPLY 1 // ток потребления
+#define APPLY_VOLTAGE_RL1_H 0 // команда подать лог. 1 на RL1 для замыкания цепи питания 12В
+#define TEST_VOLTAGE_4_POINT 1 // команда проверка напр. в 4 контрольных точках +6 -6 +5 +3.3В
+#define ANALYSIS_VOLTAGE_CORRENT 2 // команда измерение напр. и тока питания
+#define APPLY_VOLTAGE_RL2_H 3 // Команда лог. 1 на RL2 для замыкания R1 и R22
+#define TEST_VOLTAGE_11_POINT 4 // команда проверки напр. в 12 контр. точках
+#define TEST_CORRENT_LASER 5 // Команда измерения формы тока лазерного диода 
+#define TEST_VOLTAGE_PELTIE 6 // Команда измерения напряжения элемента Пельтье  
+#define APPLY_VOLTAGE_5_RL_L 7 // команда подать лог. 0 для РАЗМЫКАНИЯ RL3-RL7
+#define MASSAGE_RS232 8 // команда отправки заготовленного пакета по RS232
+#define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232 раз в сек
+#define APPLY_VOLTAGE_RL1_L 10 // команда подать лог. 0 на RL1 для прекращения питания платы
+#define APPLY_VOLTAGE_5_RL_H 11 // команда подать лог. 1 на RL3-RL7 для ЗАМЫКАНИЯ
+#define APPLY_VOLTAGE_RL2_L 12 // команда подачи лог. 0 на RL2 для размыкания R1 и R22
+
 
 #define CRC_INIT 0xffff // для подсчета контрольной суммы CRC
 
@@ -74,8 +86,19 @@ struct value_range {
 };
 
 static const struct value_range VALUE_RANGES[] = {
-    [VOLTAGE_SUPPLY] = {.min = 0, .max = 12}, // V
-    [CURRENT_SUPPLY] = {.min = 0, .max = 200} //mA
+    [APPLY_VOLTAGE_RL1_H] = {1}, 
+    [TEST_VOLTAGE_4_POINT] = {.min = 0, .max = 3},
+    [ANALYSIS_VOLTAGE_CORRENT] = {.min = 0, .max = 1},
+    [APPLY_VOLTAGE_RL2_H] = {1},
+    [TEST_VOLTAGE_11_POINT] = {.min = 0, .max = 12},
+    [TEST_CORRENT_LASER] = {1},
+    [TEST_VOLTAGE_PELTIE] = {1},
+    [APPLY_VOLTAGE_5_RL_L] = {0},
+    [MASSAGE_RS232] = {1},
+    [MASSAGE_NMEA] = {1},
+    [APPLY_VOLTAGE_RL1_L] = {0},
+    [APPLY_VOLTAGE_5_RL_H] = {1},
+    [APPLY_VOLTAGE_RL2_L] = {0},
 };
 
 int main()
@@ -98,9 +121,9 @@ int main()
     data.cmd = (uint8_t)input_number;
     
 
-    printf("Choose code parametrs from 0 to 1: ");
+    printf("Choose code parametrs from 0 to 12: ");
     scanf("%u", &input_number);
-    if (input_number < 0 || input_number > 1)
+    if (input_number < 0 || input_number > 12)
     {
         printf("Error, overflow!");
         return -1;
@@ -108,9 +131,20 @@ int main()
     data.status = (uint8_t)input_number;
     switch (data.status)
     {
-    case VOLTAGE_SUPPLY:
-        printf("%d: VOLTAGE_SUPPLY\n", data.status);
-        printf("Write code command in the range [%u-%u]V: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+    case APPLY_VOLTAGE_RL1_H:
+        printf("%d: Apply high level voltage on RL1\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case TEST_VOLTAGE_4_POINT:
+        printf("%d: CURRENT_SUPPLY\n", data.status);
+        printf("Write code command in the range [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
         scanf("%u", &data.value);
         if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].max)
         {
@@ -118,11 +152,122 @@ int main()
             return -1;
         }
         break;
-    case CURRENT_SUPPLY:
-        printf("%d: CURRENT_SUPPLY\n", data.status);
-        printf("Write code command in the range [%u-%u]mA: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+
+    case ANALYSIS_VOLTAGE_CORRENT:
+        printf("%d: Analysis voltage\n", data.status);
+        printf("Write code command in the range [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
         scanf("%u", &data.value);
         if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].max)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case APPLY_VOLTAGE_RL2_H:
+        printf("%d: Apply high level voltage on RL2\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case TEST_VOLTAGE_11_POINT:
+        printf("%d: Test voltage 11 point\n", data.status);
+        printf("Write code command in the range [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].max)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case TEST_CORRENT_LASER:
+        printf("%d: Analysis current laser\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case TEST_VOLTAGE_PELTIE:
+        printf("%d: Test voltage Peltie\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case APPLY_VOLTAGE_5_RL_L:
+        printf("%d: Apply low level voltage on RL3-RL7\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case MASSAGE_RS232:
+        printf("%d: Send massage on RS232\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case MASSAGE_NMEA:
+        printf("%d: Send massage for GPS\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case APPLY_VOLTAGE_RL1_L:
+        printf("%d: Apply low level voltage on RL1\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case APPLY_VOLTAGE_5_RL_H:
+        printf("%d: Apply high lelel voltage on RL3-RL7\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
+        {
+            printf("Error, overflow!");
+            return -1;
+        }
+        break;
+
+    case APPLY_VOLTAGE_RL2_L:
+        printf("%d: Apply low level voltage on RL2\n", data.status);
+        printf("Write code command [%u]: ", VALUE_RANGES[data.status].min);
+        scanf("%u", &data.value);
+        if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].min)
         {
             printf("Error, overflow!");
             return -1;
