@@ -128,7 +128,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Protocol.c" />
+    <ClCompile Include="func.c" />
+    <ClCompile Include="parser.c" />
+    <None Include="..\..\..\..\Downloads\soc_link.c">
+      <FileType>CppCode</FileType>
+    </None>
+    <ClCompile Include="main.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Header.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
