@@ -128,11 +128,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Parser.c" />
     <None Include="..\..\..\..\Downloads\soc_link.c">
       <FileType>CppCode</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </None>
     <ClCompile Include="func.c" />
-    <ClCompile Include="parser.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>

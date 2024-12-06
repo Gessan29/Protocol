@@ -18,10 +18,10 @@
     <ClCompile Include="main.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="parser.c">
+    <ClCompile Include="func.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="func.c">
+    <ClCompile Include="Parser.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
