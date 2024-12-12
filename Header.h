@@ -1,10 +1,11 @@
 #ifndef HEADER_H
 #define	HEADER_H
-
+#include <stdint.h>
+#include "func.h"
 #define MAX_DATA_SIZE 16 
 #define SYNC_BYTE 0xAA 
 #define TIMEOUT_RX 500 // время выполнения команды???
-#define DATA_SIZE_OFFSET 3 //???
+#define DATA_SIZE_OFFSET 3 // 2 байта crc + код команды
 // Команды
 #define CMD_GET 0
 #define CMD_SET 1
@@ -17,10 +18,10 @@
 #define STATUS_INVALID_SIZE 4 // Ошибка размера данных команды
 
 //Тестовые команды для отладки протокола
-#define APPLY_VOLTAGE_RL1 0 // команда подать лог. 1 или 0 на RL1 для замыкания цепи питания 12В
+#define APPLY_VOLTAGE_RL1 0 // команда подать лог. 0 или 1 на RL1 для замыкания цепи питания 12В
 #define TEST_VOLTAGE_4_POINT 1 // команда проверка напр. в 4 контрольных точках +6 -6 +5 +3.3В
 #define ANALYSIS_VOLTAGE_CORRENT 2 // команда измерение напр. и тока питания
-#define APPLY_VOLTAGE_RL2 3 // Команда лог. 1 или 0 на RL2 для замыкания R1 и R22
+#define APPLY_VOLTAGE_RL2 3 // Команда лог. 0 или 1 на RL2 для замыкания R1 и R22
 #define TEST_VOLTAGE_11_POINT 4 // команда проверки напр. в 12 контр. точках
 #define TEST_CORRENT_LASER 5 // Команда измерения формы тока лазерного диода 
 #define TEST_VOLTAGE_PELTIE 6 // Команда измерения напряжения элемента Пельтье  
@@ -40,8 +41,8 @@ struct for_receiving {
     uint8_t data_size_l;
     uint8_t data_size_h;
     uint8_t cmd;
-    uint8_t error;
-    uint32_t value[4];
+    uint8_t status;
+    uint32_t* value;
     uint8_t crc_l;
     uint8_t crc_h;
 };
@@ -72,8 +73,9 @@ struct value_range {
    [MASSAGE_RS232] = {1},
    [MASSAGE_NMEA] = {1},
 };
-
+ struct for_transfer data;
+ struct for_receiving priem;
 void serialize_reply(struct for_transfer* data);
 void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem);
-
+void choose_command(uint8_t status, uint32_t* value);// функия для выбора команды
 #endif

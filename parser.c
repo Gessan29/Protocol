@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 #include "Header.h"
 
@@ -25,24 +24,38 @@ static uint16_t update_crc(uint16_t crc, uint8_t byte)
 }
 
 void serialize_reply(struct for_transfer* data) {
-    if (data->buf_size < 7) {
-        printf("Error paket\n");
-        return;
-    }
+    
     uint16_t crc;
     static uint16_t PAYLOAD_SIZE;
+
     switch (data->cmd)
     {
     case 0:
-        PAYLOAD_SIZE = 1;
-        data->buf[0] = SYNC_BYTE;
-        data->buf[1] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 0) & 0xff;
-        data->buf[2] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 8) & 0xff;
-        data->buf[3] = data->cmd;
-        data->buf[4] = data->status;
-        crc = calculate_crc(data->buf + 3, PAYLOAD_SIZE + 1);
-        data->buf[5] = (crc >> 0) & 0xff;
-        data->buf[6] = (crc >> 8) & 0xff;
+        if (data->buf_size == 7)
+        {
+            data->buf = (uint8_t*)malloc(data->buf_size * sizeof(uint8_t));
+            if (data->buf == NULL)
+            {
+                printf("Memory allocation failed\n");
+            }
+            PAYLOAD_SIZE = 1;
+            data->buf[0] = SYNC_BYTE;
+            data->buf[1] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 0) & 0xff;
+            data->buf[2] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 8) & 0xff;
+            data->buf[3] = data->cmd;
+            data->buf[4] = data->status;
+            crc = calculate_crc(data->buf + 3, PAYLOAD_SIZE + 1);
+            data->buf[5] = (crc >> 0) & 0xff;
+            data->buf[6] = (crc >> 8) & 0xff;
+        }
+        else
+        {
+            data->buf = (uint8_t*)malloc(DATA_SIZE_OFFSET  * sizeof(uint8_t));
+            if (data->buf == NULL)
+            {
+                printf("Memory allocation failed\n");
+            }
+        }
         break;
 
     case 1:
@@ -79,18 +92,23 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
         priem->data_size_l = buf[1];
         priem->data_size_h = buf[2];
         priem->cmd = buf[3];
-        priem->error = buf[4];
+        priem->status = buf[4];
         crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
         priem->crc_l = (crc >> 0) & 0xFF;
         priem->crc_h = (crc >> 8) & 0xFF;
-        printf("Size paket (Bytes): %u\n", buf_size);
         break;
     case 1:
         PAYLOAD_SIZE = 5;
         priem->data_size_l = buf[1];
         priem->data_size_h = buf[2];
         priem->cmd = buf[3];
-        priem->error = buf[4];
+        priem->status = buf[4];
+        priem->value = (uint32_t*)malloc((buf[1] + buf[2]) * sizeof(uint32_t));
+        if (priem->value == NULL)
+        {
+            printf("Memory allocation failed\n");
+            return NULL;
+        }
         priem->value[0] = (uint32_t)buf[5];
         priem->value[1] = (uint32_t)buf[6];
         priem->value[2] = (uint32_t)buf[7];
@@ -98,12 +116,58 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
         crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
         priem->crc_l = (crc >> 0) & 0xFF;
         priem->crc_h = (crc >> 8) & 0xFF;
-        printf("Size paket (Bytes): %u\n", buf_size);
+        free(data.buf);
+        break;
+        
+    }
+    
+}
+void choose_command(uint8_t status, uint32_t* value)
+{
+    uint32_t size;
+    switch (status)
+    {
+    case 0:
+
+        break;
+    case 1:
+     
+        break;
+    case 2:
+
+        break;
+    case 3:
+
+        break;
+    case 4:
+
+        break;
+    case 5:
+        size = 10;
+        value = (uint32_t*)malloc(size * sizeof(uint32_t));
+        if (value == NULL)
+        {
+            printf("Memory allocation failed\n");
+            return NULL;
+        }
+        func_5(value);
+        status = 0;
+        
+        break;
+    case 6:
+
+        break;
+    case 7:
+
+        break;
+    case 8:
+
+        break;
+    case 9:
+
         break;
     }
-
 }
-
 
 
 static const uint16_t crc16_table[256] =

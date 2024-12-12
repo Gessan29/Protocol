@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+
 
 #include "Header.h"
 
@@ -14,8 +14,6 @@
 int main()
 {
 
-    struct for_transfer data;
-    struct for_receiving priem;
     unsigned int input_number; // переменная для передачи записи и передачи в struct for_transfer чисел
 
     //----------------------------------------------------------------------------------------
@@ -33,12 +31,7 @@ int main()
     {
     case 0:
         data.buf_size = 7;
-        data.buf = (uint8_t*)malloc(data.buf_size * sizeof(uint8_t));
-        if (data.buf == NULL)
-        {
-            printf("Memory allocation failed\n");
-        }
-
+        
         printf("Choose code parametrs: 5,6,8,9  ");
         scanf("%u", &input_number);
         if (input_number == 5 || input_number == 6 || input_number == 8 || input_number == 9)
@@ -65,6 +58,7 @@ int main()
         if (data.buf == NULL)
         {
             printf("Memory allocation failed\n");
+            return NULL;
         }
         printf("Choose code parametrs: 0,1,2,3,4,7  ");
         scanf("%u", &input_number);
@@ -157,8 +151,8 @@ int main()
     deserialize_reply(data.buf, data.buf_size, &priem);
     if (data.buf_size == 11) {
         printf("Received data:\n0xAA\n0x%02X\n0x%02X\n0x%02X\n", priem.data_size_l, priem.data_size_h, priem.cmd);
-        printf("0x%02X", priem.error);
-        switch (priem.error) {
+        printf("0x%02X", priem.status);
+        switch (priem.status) {
         case STATUS_OK:
             printf("  Successfully!\n");
             break;
@@ -180,12 +174,17 @@ int main()
     }
     else {
         printf("Received data:\n0xAA\n0x%02X\n0x%02X\n0x%02X\n", priem.data_size_l, priem.data_size_h, priem.cmd);
-        printf("0x%02X\n0x%02X\n0x%02X\n", priem.error, priem.crc_l,priem.crc_h);
+        printf("0x%02X\n0x%02X\n0x%02X\n", priem.status, priem.crc_l,priem.crc_h);
     }
 
+    choose_command(priem.status, priem.value);
+    for (uint32_t i = 0; i < 10; i++)
+    {
+        printf("%u\n", &priem.value[i]);
+    }
 
-
-    free(data.buf);
+    free(priem.value);
+    
     return 0;
 }
 
