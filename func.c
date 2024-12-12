@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-void func_5(uint32_t* buf)
+void func_5(uint8_t* buf)
 {
 	for (uint32_t i = 0; i < 10; i++)
 	{

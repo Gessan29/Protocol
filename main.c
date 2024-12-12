@@ -15,7 +15,7 @@ int main()
 {
 
     unsigned int input_number; // переменная для передачи записи и передачи в struct for_transfer чисел
-
+    data.buf_size = 7;
     //----------------------------------------------------------------------------------------
     printf("Choose set (1) or get (0) command (cmd): ");
     scanf("%u", &input_number);
@@ -27,11 +27,10 @@ int main()
     }
 
     data.cmd = (uint8_t)input_number;
+    
     switch (data.cmd)
     {
     case 0:
-        data.buf_size = 7;
-        
         printf("Choose code parametrs: 5,6,8,9  ");
         scanf("%u", &input_number);
         if (input_number == 5 || input_number == 6 || input_number == 8 || input_number == 9)
@@ -53,13 +52,6 @@ int main()
         break;
 
     case 1:
-        data.buf_size = 11;
-        data.buf = (uint8_t*)malloc(data.buf_size * sizeof(uint8_t));
-        if (data.buf == NULL)
-        {
-            printf("Memory allocation failed\n");
-            return NULL;
-        }
         printf("Choose code parametrs: 0,1,2,3,4,7  ");
         scanf("%u", &input_number);
         if (input_number == 0 || input_number == 1 || input_number == 2 || input_number == 3 || input_number == 4 || input_number == 7)
@@ -134,6 +126,7 @@ int main()
                 break;
             }
             printf("\nYour write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value);
+            data.buf_size = 11;
             serialize_reply(&data);
             printf("Paket:\n");
             for (int a = 0; a < 11; a++) {
