@@ -5,7 +5,7 @@
 #define MAX_DATA_SIZE 16 
 #define SYNC_BYTE 0xAA 
 #define TIMEOUT_RX 500 // время выполнения команды???
-#define DATA_SIZE_OFFSET 4 // 2 байта crc + код команды + код параметра(или ошибка)
+#define DATA_SIZE_OFFSET 3 // 2 байта crc + код команды
 #define SIZE_PAKET 7 // синхробайт + 2 байта полезных данных + cmd + status + 2 CRC
 // Команды
 #define CMD_GET 0
@@ -39,13 +39,13 @@ enum parser_result {
 };
 
 struct for_receiving {
-    uint8_t data_size_l;
-    uint8_t data_size_h;
+    uint16_t data_size;
+    size_t value_size;
     uint8_t cmd;
     uint8_t status;
     uint8_t* value;
-    uint8_t crc_l;
-    uint8_t crc_h;
+    uint16_t crc;
+    
 };
 
 struct for_transfer
@@ -54,7 +54,7 @@ struct for_transfer
     size_t buf_size;
     uint8_t cmd;
     uint8_t status;
-    uint32_t value;
+    uint8_t* value;
 };
 
 struct value_range {
@@ -78,5 +78,6 @@ struct value_range {
  struct for_receiving priem;
 void serialize_reply(struct for_transfer* data);
 void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem);
-void choose_command(uint8_t status, uint8_t* value);// функия для выбора команды
+void choose_command(uint8_t* status, uint8_t** value, size_t* value_size);// функия для выбора команды
+void transmission(struct for_transfer* data, struct for_receiving* priem); // функция для записи из for_transfer во for_receiving
 #endif

@@ -4,11 +4,12 @@
 #include <stdint.h>
 #include <string.h>
 
-void func_5(uint8_t* buf)
+void func_5(uint8_t* buf, uint8_t* status)
 {
 	for (uint32_t i = 0; i < 10; i++)
 	{
-		buf[i] = i + i;
+		buf[i] = i;
     }
+	*status = STATUS_OK;
     
 }

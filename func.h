@@ -3,6 +3,6 @@
 
 #include "Header.h"
 
-void func_5(uint8_t* buf);
+void func_5(uint8_t* buf, uint8_t* status);
 
 #endif

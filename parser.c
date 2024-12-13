@@ -24,17 +24,12 @@ static uint16_t update_crc(uint16_t crc, uint8_t byte)
 }
 
 void serialize_reply(struct for_transfer* data) {
-    
     uint16_t crc;
     static uint16_t PAYLOAD_SIZE;
-
+ 
         if (data->buf_size == 7)
         {
-            data->buf = (uint8_t*)malloc(data->buf_size * sizeof(uint8_t));
-            if (data->buf == NULL)
-            {
-                printf("Memory allocation failed\n");
-            }
+            
             PAYLOAD_SIZE = 1;
             data->buf[0] = SYNC_BYTE;
             data->buf[1] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 0) & 0xff;
@@ -46,26 +41,24 @@ void serialize_reply(struct for_transfer* data) {
             data->buf[6] = (crc >> 8) & 0xff;
             return;
         }
-        data->buf = (uint8_t*)malloc(data->buf_size * sizeof(uint8_t));
-        if (data->buf == NULL)
-        {
-            printf("Memory allocation failed\n");
-        }
-
-        PAYLOAD_SIZE = 4;
+        
+        PAYLOAD_SIZE = data->buf_size - 6;
         data->buf[0] = SYNC_BYTE;
         data->buf[1] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 0) & 0xff;
         data->buf[2] = ((PAYLOAD_SIZE + DATA_SIZE_OFFSET) >> 8) & 0xff;
         data->buf[3] = data->cmd;
         data->buf[4] = data->status;
+        int a = 0;
         for (int i = 5; i < data->buf_size - 2; i++)
         {
-            data->buf[i] = (data->value >> 0) & 0xff; // доделать!!!!
+            data->buf[i] = data->value[a];
+            a++;
         }
         crc = calculate_crc(data->buf + 3, PAYLOAD_SIZE + 1);
-        data->buf[9] = (crc >> 0) & 0xff;
-        data->buf[10] = (crc >> 8) & 0xff;
-        
+        data->buf[data->buf_size - 2] = (crc >> 0) & 0xff;
+        data->buf[data->buf_size - 1] = (crc >> 8) & 0xff;
+    
+    
     
 }
 
@@ -76,24 +69,22 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
     uint16_t crc;
     if (buf_size < 7) {
         printf("Error paket\n");
-        return;
+        return NULL;
     }
     
     if (buf_size == 7) {
         PAYLOAD_SIZE = 1;
-        priem->data_size_l = buf[1];
-        priem->data_size_h = buf[2];
+        priem->data_size = ((uint16_t)buf[1] << 0) | ((uint16_t)buf[2] << 8);
         priem->cmd = buf[3];
         priem->status = buf[4];
         crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
-        priem->crc_l = (crc >> 0) & 0xFF;
-        priem->crc_h = (crc >> 8) & 0xFF;
+        priem->crc = crc;
+        
         return;
     }
     
-        PAYLOAD_SIZE = 4;
-        priem->data_size_l = buf[1];
-        priem->data_size_h = buf[2];
+        PAYLOAD_SIZE = buf_size - 6;
+        priem->data_size = ((uint16_t)buf[1] << 0) | ((uint16_t)buf[2] << 8);
         priem->cmd = buf[3];
         priem->status = buf[4];
         priem->value = (uint8_t*)malloc(buf_size - 7 * sizeof(uint8_t));
@@ -102,23 +93,24 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
             printf("Memory allocation failed\n");
             return NULL;
         }
-        priem->value[0] = buf[5];
-        priem->value[1] = buf[6];
-        priem->value[2] = buf[7];
-        priem->value[3] = buf[8];
+        for (int i = 0; i < buf_size - 7; i++)
+        {
+            priem->value[i] = buf[5+i];
+            
+        }
         crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
-        priem->crc_l = (crc >> 0) & 0xFF;
-        priem->crc_h = (crc >> 8) & 0xFF;
-        free(data.buf);
+        priem->crc = crc;
+       
+        
         
         
     
     
 }
-void choose_command(uint8_t status, uint8_t* value)
+void choose_command(uint8_t* status, uint8_t** value, size_t* value_size)
 {
-    uint32_t size;
-    switch (status)
+    
+    switch (*status)
     {
     case 0:
 
@@ -136,16 +128,14 @@ void choose_command(uint8_t status, uint8_t* value)
 
         break;
     case 5:
-        size = 10;
-        value = (uint8_t*)malloc(size * sizeof(uint8_t));
-        if (value == NULL)
+        *value_size = 10;
+        *value = (uint8_t*)malloc(*value_size * sizeof(uint8_t));
+        if (*value == NULL)
         {
             printf("Memory allocation failed\n");
             return NULL;
         }
-        func_5(value);
-        status = 0;
-        
+        func_5(*value, status);
         break;
     case 6:
 
@@ -162,6 +152,27 @@ void choose_command(uint8_t status, uint8_t* value)
     }
 }
 
+void transmission(struct for_transfer* data, struct for_receiving* priem) {
+
+    data->buf_size = 7 + priem->value_size;
+    data->status = priem->status;
+    data->value = (uint8_t*)malloc(priem->value_size * sizeof(uint8_t));
+    if (data->buf == NULL)
+    {
+        printf("Memory allocation failed\n");
+        return NULL;
+    }
+    for (size_t i = 0; i < priem->value_size; i++)
+    {
+        data->value[i] = priem->value[i];
+    }
+    data->buf = (uint8_t*)malloc(data->buf_size * sizeof(uint8_t));
+    if (data->buf == NULL)
+    {
+        printf("Memory allocation failed\n");
+        return NULL;
+    }
+}
 
 static const uint16_t crc16_table[256] =
 {
