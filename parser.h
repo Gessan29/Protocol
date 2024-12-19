@@ -1,5 +1,5 @@
-#ifndef HEADER_H
-#define	HEADER_H
+#ifndef PARSER_H
+#define	PARSER_H
 #include <stdint.h>
 #include "func.h"
 #define MAX_DATA_SIZE 16 
@@ -39,7 +39,7 @@ enum parser_result {
 };
 
 struct for_receiving {
-    uint16_t data_size;
+    uint16_t data;
     size_t value_size;
     uint8_t cmd;
     uint8_t status;

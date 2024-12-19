@@ -1,18 +1,15 @@
 #define _CRT_SECURE_NO_WARNINGS
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "parser.h"
 
-#include "Header.h"
-
- static const uint16_t crc16_table[256]; // defined below
+ static const uint16_t crc16_table[256];
 
 static uint16_t update_crc(uint16_t crc, uint8_t byte)
 {
     return crc16_table[(crc ^ byte) & 0xFF] ^ (crc >> 8);
 }
-
 
  static uint16_t calculate_crc(const uint8_t* array, int size) {
     uint16_t crc = CRC_INIT; // #define CRC_INIT 0xffff
@@ -57,11 +54,8 @@ void serialize_reply(struct for_transfer* data) {
         crc = calculate_crc(data->buf + 3, PAYLOAD_SIZE + 1);
         data->buf[data->buf_size - 2] = (crc >> 0) & 0xff;
         data->buf[data->buf_size - 1] = (crc >> 8) & 0xff;
-    
-    
-    
-}
 
+}
 
 void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem)
 {
@@ -74,7 +68,7 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
     
     if (buf_size == 7) {
         PAYLOAD_SIZE = 1;
-        priem->data_size = ((uint16_t)buf[1] << 0) | ((uint16_t)buf[2] << 8);
+        priem->data = ((uint16_t)buf[1] << 0) | ((uint16_t)buf[2] << 8);
         priem->cmd = buf[3];
         priem->status = buf[4];
         crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
@@ -84,7 +78,7 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
     }
     
         PAYLOAD_SIZE = buf_size - 6;
-        priem->data_size = ((uint16_t)buf[1] << 0) | ((uint16_t)buf[2] << 8);
+        priem->data = ((uint16_t)buf[1] << 0) | ((uint16_t)buf[2] << 8);
         priem->cmd = buf[3];
         priem->status = buf[4];
         priem->value = (uint8_t*)malloc(buf_size - 7 * sizeof(uint8_t));
@@ -100,55 +94,68 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
         }
         crc = calculate_crc(buf + 3, PAYLOAD_SIZE + 1);
         priem->crc = crc;
-       
-        
-        
-        
-    
-    
+
 }
+
 void choose_command(uint8_t* status, uint8_t** value, size_t* value_size)
 {
-    
     switch (*status)
     {
     case 0:
-
+        *value_size = 4;
+        func_0(*value, status);
         break;
     case 1:
-     
+        *value_size = 4;
+        func_1(*value, status);
         break;
     case 2:
-
+        *value_size = 4;
+        func_2(*value, status);
         break;
     case 3:
-
+        *value_size = 4;
+        func_3(*value, status);
         break;
     case 4:
-
+        *value_size = 4; 
+        func_4(*value, status);
         break;
     case 5:
-        *value_size = 10;
+        *value_size = 200;
         *value = (uint8_t*)malloc(*value_size * sizeof(uint8_t));
         if (*value == NULL)
         {
             printf("Memory allocation failed\n");
-            return NULL;
+            return -1;
         }
         func_5(*value, status);
         break;
     case 6:
-
+        *value_size = 20;
+        *value = (uint8_t*)malloc(*value_size * sizeof(uint8_t));
+        if (*value == NULL)
+        {
+            printf("Memory allocation failed\n");
+            return -1;
+        }
+        func_6(*value, status);
         break;
     case 7:
-
+        *value_size = 4;
+        func_7(*value, status);
         break;
     case 8:
-
+        *value_size = 4;
+        func_8(*value, status);
         break;
     case 9:
-
+        *value_size = 4;
+        func_9(*value, status);
         break;
+    }
+    if (*status != STATUS_OK) {
+        *value[0] = (uint8_t*)0;
     }
 }
 

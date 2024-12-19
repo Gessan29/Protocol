@@ -1,22 +1,14 @@
-﻿// Протокол общения компа с платой стенда и платой газоанализатора, CRC - проверка целостности
-#define _CRT_SECURE_NO_WARNINGS
-
+﻿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-
-#include "Header.h"
-
-//void serialize_reply(struct for_transfer* data);
-//void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem);
+#include "parser.h"
 
 int main()
 {
-
     unsigned int input_number; // переменная для передачи записи и передачи в struct for_transfer чисел
     data.buf_size = 7;
-    //----------------------------------------------------------------------------------------
+    
     printf("Choose set (1) or get (0) command (cmd): ");
     scanf("%u", &input_number);
 
@@ -76,7 +68,7 @@ int main()
                 printf("%d: Set low (0) or high (1) level voltage on RL1\n", data.status);
                 printf("Write code command [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
                 scanf("%u", &data.value[0]);
-                if (data.value < VALUE_RANGES[data.status].min || data.value > VALUE_RANGES[data.status].max)
+                if (data.value[0] < VALUE_RANGES[data.status].min || data.value[0] > VALUE_RANGES[data.status].max)
                 {
                     printf("Error, overflow!");
                     return -1;
@@ -138,7 +130,7 @@ int main()
                 }
                 break;
             }
-            printf("\nYour write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value);
+            printf("\nYour write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value[0]);
             data.buf_size = 11;
             data.buf = (uint8_t*)malloc(data.buf_size * sizeof(uint8_t));
             if (data.buf == NULL)
@@ -164,42 +156,37 @@ int main()
     deserialize_reply(data.buf, data.buf_size, &priem);
     free(data.buf);
     if (data.buf_size == 11) {
-        printf("Received data:\n0xAA\n0x%02X\n0x%02X\n0x%02X\n", priem.data_size >> 0, priem.data_size >> 8, priem.cmd);
-        printf("0x%02X", priem.status);
-        switch (priem.status) {
-        case STATUS_OK:
-            printf("  Successfully!\n");
-            break;
-        case STATUS_EXEC_ERROR:
-            printf("  Successfully!\n"); //(Сommand execution error)
-            break;
-        case STATUS_INVALID_CMD:
-            printf("  A non-existent team\n");
-            break;
-        case STATUS_TIMED_OUT:
-            printf("  Command execution time exceeded\n");
-            break;
-        case STATUS_INVALID_SIZE:
-            printf("  Сommand data size error\n");
-            break;
-        default:
-            printf("\n");
-        }
-        printf("0x%02X\n0x%02X\n0x%02X\n0x%02X\n", priem.value[0], priem.value[1], priem.value[2], priem.value[3]);
-        printf("0x%02X\n0x%02X\n", priem.crc >> 0 & 0xff, priem.crc >> 8);
+        printf("Received data:\n0xAA\n0x%X\n0x%X\n0x%X\n0x%X\n", priem.data >> 0, priem.data >> 8, priem.cmd, priem.status);
+        printf("0x%X\n0x%X\n0x%X\n0x%X\n", priem.value[0], priem.value[1], priem.value[2], priem.value[3]);
+        printf("0x%X\n0x%X\n", priem.crc >> 0 & 0xff, priem.crc >> 8);
     }
     else {
-        printf("Received data:\n0xAA\n0x%02X\n0x%02X\n0x%02X\n", priem.data_size >> 0, priem.data_size >> 8, priem.cmd);
-        printf("0x%02X\n0x%02X\n0x%02X\n", priem.status, priem.crc >> 0 & 0xff, priem.crc >> 8);
+        printf("Received data:\n0xAA\n0x%X\n0x%X\n0x%X\n", priem.data >> 0, priem.data >> 8, priem.cmd);
+        printf("0x%X\n0x%X\n0x%X\n", priem.status, priem.crc >> 0 & 0xff, priem.crc >> 8);
     }
 
     choose_command(&priem.status, &priem.value, &priem.value_size);
-    
-
     transmission(&data, &priem);
-
     serialize_reply(&data);
+
     printf("\nPaket:\n");
+    switch (data.buf[4]) {
+    case STATUS_OK:
+        printf("Successfully!\n");
+        break;
+    case STATUS_EXEC_ERROR:
+        printf("Command execution error!\n"); //()
+        break;
+    case STATUS_INVALID_CMD:
+        printf("A non-existent team\n");
+        break;
+    case STATUS_TIMED_OUT:
+        printf("Command execution time exceeded\n");
+        break;
+    case STATUS_INVALID_SIZE:
+        printf("Command data size error\n");
+        break;
+    }
     for (int a = 0; a < data.buf_size; a++) {
         printf("0x%02X\n", data.buf[a]);
     }
@@ -209,6 +196,3 @@ int main()
     
     return 0;
 }
-
-
-
