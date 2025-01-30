@@ -1,5 +1,5 @@
-#ifndef FUNC_H
-#define	FUNC_H
+#ifndef HARDWARE_H
+#define	HARDWARE_H
 
 #include "parser.h"
 

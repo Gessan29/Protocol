@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define	PARSER_H
 #include <stdint.h>
-#include "func.h"
+#include "hardware.h"
 #define MAX_DATA_SIZE 16 
 #define SYNC_BYTE 0xAA 
 #define TIMEOUT_RX 500 // время выполнения команды???
@@ -28,7 +28,7 @@
 #define TEST_VOLTAGE_PELTIE 6 // Команда измерения напряжения элемента Пельтье  
 #define APPLY_VOLTAGE_5_RL 7 // команда подать лог. 0 или 1 для РАЗМЫКАНИЯ RL3-RL7
 #define MASSAGE_RS232 8 // команда отправки заготовленного пакета по RS232
-#define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232 раз в сек
+#define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232
 
 #define CRC_INIT 0xffff // для подсчета контрольной суммы CRC
 
@@ -60,19 +60,21 @@ struct for_transfer
 struct value_range {
     uint32_t min;
     uint32_t max;
+    uint32_t voltage_4[4];
+    uint32_t voltage_11[11];
 };
 
  static const struct value_range VALUE_RANGES[] = {
    [APPLY_VOLTAGE_RL1] = {.min = 0, .max = 1},
-   [TEST_VOLTAGE_4_POINT] = {.min = 0, .max = 3},
+   [TEST_VOLTAGE_4_POINT] = {.min = 1, .max = 4, .voltage_4 = {6, 3, 5, 6}},
    [ANALYSIS_VOLTAGE_CORRENT] = {.min = 0, .max = 1},
    [APPLY_VOLTAGE_RL2] = {.min = 0, .max = 1},
-   [TEST_VOLTAGE_11_POINT] = {.min = 0, .max = 12},
+   [TEST_VOLTAGE_11_POINT] = {.min = 0, .max = 10, .voltage_11 = {1200, 1800, 2500, 5500, 4500, 5500, 5500, 1800, 2500, 5000, 2048}},
    [TEST_CORRENT_LASER] = {1},
    [TEST_VOLTAGE_PELTIE] = {1},
    [APPLY_VOLTAGE_5_RL] = {.min = 0, .max = 1},
    [MASSAGE_RS232] = {1},
-   [MASSAGE_NMEA] = {1},
+   [MASSAGE_NMEA] =  {.min = 0, .max = 9},
 };
  struct for_transfer data;
  struct for_receiving priem;

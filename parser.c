@@ -63,7 +63,7 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
     uint16_t crc;
     if (buf_size < 7) {
         printf("Error paket\n");
-        return NULL;
+        return -1;
     }
     
     if (buf_size == 7) {
@@ -85,7 +85,7 @@ void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving
         if (priem->value == NULL)
         {
             printf("Memory allocation failed\n");
-            return NULL;
+            return -1;
         }
         for (int i = 0; i < buf_size - 7; i++)
         {
@@ -132,7 +132,7 @@ void choose_command(uint8_t* status, uint8_t** value, size_t* value_size)
         func_5(*value, status);
         break;
     case 6:
-        *value_size = 20;
+        *value_size = 4;
         *value = (uint8_t*)malloc(*value_size * sizeof(uint8_t));
         if (*value == NULL)
         {
@@ -147,10 +147,16 @@ void choose_command(uint8_t* status, uint8_t** value, size_t* value_size)
         break;
     case 8:
         *value_size = 4;
+        *value = (uint8_t*)malloc(*value_size * sizeof(uint8_t));
+        if (*value == NULL)
+        {
+            printf("Memory allocation failed\n");
+            return -1;
+        }
         func_8(*value, status);
         break;
     case 9:
-        *value_size = 4;
+        *value_size = 8;
         func_9(*value, status);
         break;
     }
@@ -167,7 +173,7 @@ void transmission(struct for_transfer* data, struct for_receiving* priem) {
     if (data->buf == NULL)
     {
         printf("Memory allocation failed\n");
-        return NULL;
+        return -1;
     }
     for (size_t i = 0; i < priem->value_size; i++)
     {
@@ -177,7 +183,7 @@ void transmission(struct for_transfer* data, struct for_receiving* priem) {
     if (data->buf == NULL)
     {
         printf("Memory allocation failed\n");
-        return NULL;
+        return -1;
     }
 }
 

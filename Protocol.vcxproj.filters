@@ -18,7 +18,7 @@
     <ClCompile Include="main.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="func.c">
+    <ClCompile Include="hardware.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="parser.c">
@@ -29,7 +29,7 @@
     <ClInclude Include="parser.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="func.h">
+    <ClInclude Include="hardware.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

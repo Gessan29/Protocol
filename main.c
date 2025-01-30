@@ -7,7 +7,7 @@
 int main()
 {
     unsigned int input_number; // переменная для передачи записи и передачи в struct for_transfer чисел
-    data.buf_size = 7;
+    
     
     printf("Choose set (1) or get (0) command (cmd): ");
     scanf("%u", &input_number);
@@ -23,9 +23,9 @@ int main()
     switch (data.cmd)
     {
     case 0:
-        printf("Choose code parametrs: 5,6,8,9  ");
+        printf("Choose code parametrs: 5,6,8  ");
         scanf("%u", &input_number);
-        if (input_number == 5 || input_number == 6 || input_number == 8 || input_number == 9)
+        if (input_number == 5 || input_number == 6 || input_number == 8 )
         {
             data.status = (uint8_t)input_number;
             printf("\nYour write cmd: %u\nYour write code parametrs: %u\n", data.cmd, data.status);
@@ -34,7 +34,7 @@ int main()
             if (data.buf == NULL)
             {
                 printf("Memory allocation failed\n");
-                return NULL;
+                return -1;
             }
             serialize_reply(&data);
             printf("Paket:\n");
@@ -51,15 +51,15 @@ int main()
         break;
 
     case 1:
-        printf("Choose code parametrs: 0,1,2,3,4,7  ");
+        printf("Choose code parametrs: 0,1,2,3,4,7,9  ");
         scanf("%u", &input_number);
-        if (input_number == 0 || input_number == 1 || input_number == 2 || input_number == 3 || input_number == 4 || input_number == 7)
+        if (input_number == 0 || input_number == 1 || input_number == 2 || input_number == 3 || input_number == 4 || input_number == 7 || input_number == 9 )
         {
             data.value = (uint8_t*)malloc(4 * sizeof(uint8_t));
             if (data.value == NULL)
             {
                 printf("Memory allocation failed\n");
-                return NULL;
+                return -1;
             }
             data.status = (uint8_t)input_number;
             switch (data.status)
@@ -76,8 +76,8 @@ int main()
                 break;
 
             case TEST_VOLTAGE_4_POINT:
-                printf("%d: CURRENT_SUPPLY\n", data.status);
-                printf("Write code command in the range [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+                printf("%d: 4 voltage check points test\n", data.status);
+                printf("Choose one check point:\n1: -%d\n2: +%d.3\n3: +%d\n4: +%d\n", VALUE_RANGES[data.status].voltage_4[0], VALUE_RANGES[data.status].voltage_4[1], VALUE_RANGES[data.status].voltage_4[2], VALUE_RANGES[data.status].voltage_4[3]);
                 scanf("%u", &data.value[0]);
                 if (data.value[0] < VALUE_RANGES[data.status].min || data.value[0] > VALUE_RANGES[data.status].max)
                 {
@@ -88,7 +88,7 @@ int main()
 
             case ANALYSIS_VOLTAGE_CORRENT:
                 printf("%d: Analysis voltage\n", data.status);
-                printf("Write code command in the range [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+                printf("Write code command. 0 - voltage; 1 - corrent  [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
                 scanf("%u", &data.value[0]);
                 if (data.value[0] < VALUE_RANGES[data.status].min || data.value[0] > VALUE_RANGES[data.status].max)
                 {
@@ -109,8 +109,11 @@ int main()
                 break;
 
             case TEST_VOLTAGE_11_POINT:
-                printf("%d: Test voltage 11 point\n", data.status);
-                printf("Write code command in the range [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+                printf("%d: 11 voltage check points test\n", data.status);
+                printf("Choose one check point:\n");
+                for (int a = 0; a < 11; a++) {
+                    printf("%d: %.3fV\n", a, (float)VALUE_RANGES[data.status].voltage_11[a] /1000);
+                }
                 scanf("%u", &data.value[0]);
                 if (data.value[0] < VALUE_RANGES[data.status].min || data.value[0] > VALUE_RANGES[data.status].max)
                 {
@@ -129,6 +132,17 @@ int main()
                     return -1;
                 }
                 break;
+
+            case MASSAGE_NMEA:
+                printf("%d: Choose which second to send (HHMMSS.SSS)\n", data.status);
+                printf("Write second [%u-%u]: ", VALUE_RANGES[data.status].min, VALUE_RANGES[data.status].max);
+                scanf("%u", &data.value[0]);
+                if (data.value[0] < VALUE_RANGES[data.status].min || data.value[0] > VALUE_RANGES[data.status].max)
+                {
+                    printf("Error, overflow!");
+                    return -1;
+                }
+                break;
             }
             printf("\nYour write cmd: %u\nYour write code parametrs: %u\nYour write command: %u\n", data.cmd, data.status, data.value[0]);
             data.buf_size = 11;
@@ -136,7 +150,7 @@ int main()
             if (data.buf == NULL)
             {
                 printf("Memory allocation failed\n");
-                return NULL;
+                return -1;
             }
             serialize_reply(&data);
             free(data.value);
@@ -175,7 +189,7 @@ int main()
         printf("Successfully!\n");
         break;
     case STATUS_EXEC_ERROR:
-        printf("Command execution error!\n"); //()
+        printf("Command execution error!\n"); 
         break;
     case STATUS_INVALID_CMD:
         printf("A non-existent team\n");
