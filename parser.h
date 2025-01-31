@@ -74,8 +74,9 @@ struct value_range {
    [TEST_VOLTAGE_PELTIE] = {1},
    [APPLY_VOLTAGE_5_RL] = {.min = 0, .max = 1},
    [MASSAGE_RS232] = {1},
-   [MASSAGE_NMEA] =  {.min = 0, .max = 9},
+   [MASSAGE_NMEA] =  {.min = 0, .max = 59},
 };
+
  struct for_transfer data;
  struct for_receiving priem;
 void serialize_reply(struct for_transfer* data);

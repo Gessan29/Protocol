@@ -3,7 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
-
+const char* Names[11] = {
+       "+", "+", "+", "Power GPS +", "VrefADC +",
+       "+", "-", "+", "Offset +", "Laser +",
+       "VrefDAC +"
+}; // для удобство выбора контрольной точки в коде команды 4
 int main()
 {
     unsigned int input_number; // переменная для передачи записи и передачи в struct for_transfer чисел
@@ -112,7 +116,7 @@ int main()
                 printf("%d: 11 voltage check points test\n", data.status);
                 printf("Choose one check point:\n");
                 for (int a = 0; a < 11; a++) {
-                    printf("%d: %.3fV\n", a, (float)VALUE_RANGES[data.status].voltage_11[a] /1000);
+                    printf("%d: %s%.3fV\n", a, Names[a], (float)VALUE_RANGES[data.status].voltage_11[a] /1000);
                 }
                 scanf("%u", &data.value[0]);
                 if (data.value[0] < VALUE_RANGES[data.status].min || data.value[0] > VALUE_RANGES[data.status].max)

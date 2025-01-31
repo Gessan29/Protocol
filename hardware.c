@@ -187,17 +187,16 @@ void func_7(uint8_t* buf, uint8_t* status)
 
 void func_8(uint8_t* buf, uint8_t* status)
 {
+	for (int a = 0; a < 4; a++) {
+		buf[a] = 0;
+	}
 	*status = STATUS_OK;
 }
 
 void func_9(uint8_t* buf, uint8_t* status)
 {
-	buf[1] = 0; //12:35:0...
-	buf[2] = 5;
-	buf[3] = 3;
-	buf[4] = 2;
-	buf[5] = 1;
-	buf[6] = 0;
-	buf[7] = 0;
+	buf[1] = 0;
+	buf[2] = 0;
+	buf[3] = 0;
 	*status = STATUS_OK;
 }

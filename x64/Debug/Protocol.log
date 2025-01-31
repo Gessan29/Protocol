@@ -1,4 +1,33 @@
 ﻿  hardware.c
+  main.c
+C:\Users\user\source\repos\Protocol\Protocol\main.c(74,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(74,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
+C:\Users\user\source\repos\Protocol\Protocol\main.c(85,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(85,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
+C:\Users\user\source\repos\Protocol\Protocol\main.c(96,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(96,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
+C:\Users\user\source\repos\Protocol\Protocol\main.c(107,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(107,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
+C:\Users\user\source\repos\Protocol\Protocol\main.c(121,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(121,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
+C:\Users\user\source\repos\Protocol\Protocol\main.c(132,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(132,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
+C:\Users\user\source\repos\Protocol\Protocol\main.c(143,23): warning C4477: "scanf": в строке форматирования "%u" требуется аргумент типа "unsigned int *", но вариативный аргумент "1" имеет тип "uint8_t *"
+      C:\Users\user\source\repos\Protocol\Protocol\main.c(143,23):
+      рекомендуется использовать "%hhu" в строке форматирования
+  
   parser.c
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(42,39): warning C4267: =: преобразование из "size_t" в "uint16_t"; возможна потеря данных
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(66,9): warning C4098: deserialize_reply: функция типа "void", возвращающая значение
@@ -7,8 +36,8 @@ C:\Users\user\source\repos\Protocol\Protocol\parser.c(88,13): warning C4098: des
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(130,13): warning C4098: choose_command: функция типа "void", возвращающая значение
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(140,13): warning C4098: choose_command: функция типа "void", возвращающая значение
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(154,13): warning C4098: choose_command: функция типа "void", возвращающая значение
+  Создание кода...
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(164,19): warning C4047: =: "uint8_t" отличается по уровням косвенного обращения от "uint8_t *"
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(176,9): warning C4098: transmission: функция типа "void", возвращающая значение
 C:\Users\user\source\repos\Protocol\Protocol\parser.c(186,9): warning C4098: transmission: функция типа "void", возвращающая значение
-  Создание кода...
   Protocol.vcxproj -> C:\Users\user\source\repos\Protocol\x64\Debug\Protocol.exe

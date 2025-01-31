@@ -156,7 +156,7 @@ void choose_command(uint8_t* status, uint8_t** value, size_t* value_size)
         func_8(*value, status);
         break;
     case 9:
-        *value_size = 8;
+        *value_size = 4;
         func_9(*value, status);
         break;
     }
