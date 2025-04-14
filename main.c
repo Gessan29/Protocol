@@ -160,7 +160,7 @@ int main()
             free(data.value);
             printf("Paket:\n");
             for (int a = 0; a < 11; a++) {
-                printf("0x%02X\n", data.buf[a]);
+                printf("%02X", data.buf[a]);
             }
             printf("\n");
         }
@@ -173,16 +173,6 @@ int main()
     
     deserialize_reply(data.buf, data.buf_size, &priem);
     free(data.buf);
-    if (data.buf_size == 11) {
-        printf("Received data:\n0xAA\n0x%X\n0x%X\n0x%X\n0x%X\n", priem.data >> 0, priem.data >> 8, priem.cmd, priem.status);
-        printf("0x%X\n0x%X\n0x%X\n0x%X\n", priem.value[0], priem.value[1], priem.value[2], priem.value[3]);
-        printf("0x%X\n0x%X\n", priem.crc >> 0 & 0xff, priem.crc >> 8);
-    }
-    else {
-        printf("Received data:\n0xAA\n0x%X\n0x%X\n0x%X\n", priem.data >> 0, priem.data >> 8, priem.cmd);
-        printf("0x%X\n0x%X\n0x%X\n", priem.status, priem.crc >> 0 & 0xff, priem.crc >> 8);
-    }
-
     choose_command(&priem.status, &priem.value, &priem.value_size);
     transmission(&data, &priem);
     serialize_reply(&data);
