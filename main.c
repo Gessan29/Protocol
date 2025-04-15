@@ -43,7 +43,7 @@ int main()
             serialize_reply(&data);
             printf("Paket:\n");
             for (int a = 0; a < 7; a++) {
-                printf("0x%02X", data.buf[a]);
+                printf("%02X", data.buf[a]);
             }
             printf("\n");
         }
